@@ -1,0 +1,38 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["app", "catalog"]
+}
+
+// -----------------------------------------------------------------------------
+// Catalog schema models (RepDB dataset lookup data)
+// -----------------------------------------------------------------------------
+
+model Muscle {
+  id        Int     @id @default(autoincrement()) @db.SmallInt
+  slug      String  @unique
+  name      String
+  imagePath String? @map("image_path")
+
+  @@map("muscles")
+  @@schema("catalog")
+}
+
+model Equipment {
+  id        Int     @id @default(autoincrement()) @db.SmallInt
+  slug      String  @unique
+  name      String
+  imagePath String? @map("image_path")
+
+  @@map("equipment")
+  @@schema("catalog")
+}
+
+// -----------------------------------------------------------------------------
+// App schema models will be added as each module is built (identity, workouts, etc.)
+// -----------------------------------------------------------------------------
