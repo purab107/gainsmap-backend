@@ -1,0 +1,24 @@
+// -----------------------------------------------------------------------------
+// Records module: Cached personal records (max weight, max reps, 1RM, volume)
+// -----------------------------------------------------------------------------
+
+model PersonalRecord {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exerciseId String   @map("exercise_id") @db.Uuid
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  recordType String   @map("record_type")
+  value      Decimal  @db.Decimal(10, 3)
+  weightKg   Decimal? @map("weight_kg") @db.Decimal(7, 3)
+  reps       Int?     @db.SmallInt
+  formula    String?
+  setId      String?  @map("set_id") @db.Uuid
+  set        Set?     @relation(fields: [setId], references: [id], onDelete: SetNull)
+  achievedAt DateTime @map("achieved_at") @db.Timestamptz
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([userId, exerciseId, recordType])
+  @@map("personal_records")
+  @@schema("app")
+}

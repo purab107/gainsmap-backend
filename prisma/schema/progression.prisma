@@ -1,0 +1,28 @@
+// -----------------------------------------------------------------------------
+// Progression module: Double-progression engine outputs and recommendations
+// -----------------------------------------------------------------------------
+
+model ProgressionRecommendation {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId              String    @map("user_id") @db.Uuid
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exerciseId          String    @map("exercise_id") @db.Uuid
+  exercise            Exercise  @relation(fields: [exerciseId], references: [id])
+  workoutId           String?   @map("workout_id") @db.Uuid
+  workout             Workout?  @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  ruleVersion         String    @map("rule_version")
+  inputs              Json      @db.JsonB
+  action              String
+  recommendedWeightKg Decimal?  @map("recommended_weight_kg") @db.Decimal(7, 3)
+  recommendedRepsMin  Int?      @map("recommended_reps_min") @db.SmallInt
+  recommendedRepsMax  Int?      @map("recommended_reps_max") @db.SmallInt
+  reason              String
+  status              String    @default("pending")
+  appliedWeightKg     Decimal?  @map("applied_weight_kg") @db.Decimal(7, 3)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  resolvedAt          DateTime? @map("resolved_at") @db.Timestamptz
+
+  @@index([userId, exerciseId, createdAt(sort: Desc)], map: "progression_recs_user_exercise_idx")
+  @@map("progression_recommendations")
+  @@schema("app")
+}

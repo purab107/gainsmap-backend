@@ -1,0 +1,25 @@
+// -----------------------------------------------------------------------------
+// Catalog schema models (RepDB dataset lookup data)
+// -----------------------------------------------------------------------------
+
+model Muscle {
+  id              Int              @id @default(autoincrement()) @db.SmallInt
+  slug            String           @unique
+  name            String
+  imagePath       String?          @map("image_path")
+  exerciseMuscles ExerciseMuscle[]
+
+  @@map("muscles")
+  @@schema("catalog")
+}
+
+model Equipment {
+  id        Int        @id @default(autoincrement()) @db.SmallInt
+  slug      String     @unique
+  name      String
+  imagePath String?    @map("image_path")
+  exercises Exercise[]
+
+  @@map("equipment")
+  @@schema("catalog")
+}

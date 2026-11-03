@@ -1,0 +1,51 @@
+// -----------------------------------------------------------------------------
+// Routines module: Workout templates and routine exercise definitions
+// -----------------------------------------------------------------------------
+
+model Routine {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  notes      String?
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  routineExercises RoutineExercise[]
+  workouts         Workout[]
+
+  @@unique([id, userId])
+  @@index([userId, createdAt(sort: Desc)], map: "routines_user_active_idx")
+  @@map("routines")
+  @@schema("app")
+}
+
+model RoutineExercise {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  routineId       String   @map("routine_id") @db.Uuid
+  exerciseId      String   @map("exercise_id") @db.Uuid
+  position        Int      @db.SmallInt
+  supersetGroup   Int?     @map("superset_group") @db.SmallInt
+  targetSets      Int      @default(3) @map("target_sets") @db.SmallInt
+  repMin          Int?     @map("rep_min") @db.SmallInt
+  repMax          Int?     @map("rep_max") @db.SmallInt
+  targetRir       Decimal? @map("target_rir") @db.Decimal(3, 1)
+  restSeconds     Int?     @map("rest_seconds") @db.SmallInt
+  loadIncrementKg Decimal? @map("load_increment_kg") @db.Decimal(5, 3)
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  routine          Routine           @relation(fields: [routineId, userId], references: [id, userId], onDelete: Cascade)
+  exercise         Exercise          @relation(fields: [exerciseId], references: [id])
+  workoutExercises WorkoutExercise[]
+
+  @@unique([routineId, position], map: "routine_exercises_position_uq")
+  @@unique([id, userId])
+  @@index([exerciseId], map: "routine_exercises_exercise_idx")
+  @@map("routine_exercises")
+  @@schema("app")
+}

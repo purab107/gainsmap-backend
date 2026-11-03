@@ -1,0 +1,73 @@
+// -----------------------------------------------------------------------------
+// Exercises module: Catalog exercises (RepDB) and custom exercises
+// -----------------------------------------------------------------------------
+
+model Exercise {
+  id                 String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  catalogKey         String?    @unique @map("catalog_key")
+  ownerUserId        String?    @map("owner_user_id") @db.Uuid
+  ownerUser          User?      @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  name               String
+  category           String
+  bodyPart           String     @map("body_part")
+  equipmentId        Int?       @map("equipment_id") @db.SmallInt
+  equipment          Equipment? @relation(fields: [equipmentId], references: [id])
+  trackingType       String     @map("tracking_type")
+  mechanic           String?
+  forceType          String?    @map("force_type")
+  difficulty         String?
+  met                Decimal    @default(5.0) @db.Decimal(4, 2)
+  isUnilateral       Boolean    @default(false) @map("is_unilateral")
+  isBodyweight       Boolean    @default(false) @map("is_bodyweight")
+  defaultRestSeconds Int?       @map("default_rest_seconds") @db.SmallInt
+  imagePaths         String[]   @default([]) @map("image_paths")
+  goals              String[]   @default([])
+  tags               String[]   @default([])
+  deprecatedAt       DateTime?  @map("deprecated_at") @db.Timestamptz
+  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  translations               ExerciseTranslation[]
+  muscles                    ExerciseMuscle[]
+  routineExercises           RoutineExercise[]
+  workoutExercises           WorkoutExercise[]
+  sets                       Set[]
+  progressionRecommendations ProgressionRecommendation[]
+  personalRecords            PersonalRecord[]
+
+  @@unique([id, ownerUserId], name: "exercises_id_owner_uq")
+  @@index([bodyPart], map: "exercises_body_part_idx")
+  @@index([equipmentId], map: "exercises_equipment_idx")
+  @@index([category], map: "exercises_category_idx")
+  @@index([ownerUserId], map: "exercises_owner_idx")
+  @@map("exercises")
+  @@schema("app")
+}
+
+model ExerciseTranslation {
+  exerciseId   String   @map("exercise_id") @db.Uuid
+  exercise     Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  lang         String
+  name         String
+  description  String?
+  instructions String[] @default([])
+  tips         String[] @default([])
+
+  @@id([exerciseId, lang])
+  @@map("exercise_translations")
+  @@schema("app")
+}
+
+model ExerciseMuscle {
+  exerciseId   String   @map("exercise_id") @db.Uuid
+  exercise     Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  muscleId     Int      @map("muscle_id") @db.SmallInt
+  muscle       Muscle   @relation(fields: [muscleId], references: [id])
+  role         String
+  volumeWeight Decimal  @default(1.0) @map("volume_weight") @db.Decimal(3, 2)
+
+  @@id([exerciseId, muscleId])
+  @@index([muscleId, exerciseId], map: "exercise_muscles_muscle_idx")
+  @@map("exercise_muscles")
+  @@schema("app")
+}

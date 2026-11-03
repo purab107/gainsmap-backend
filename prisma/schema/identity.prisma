@@ -1,0 +1,19 @@
+// -----------------------------------------------------------------------------
+// Identity domain: User preferences and settings
+// -----------------------------------------------------------------------------
+
+model UserSettings {
+  userId                 String   @id @map("user_id") @db.Uuid
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unitSystem             String   @default("metric") @map("unit_system")
+  language               String   @default("en")
+  timezone               String   @default("UTC")
+  weekStartsOn           String   @default("monday") @map("week_starts_on")
+  restTimerEnabled       Boolean  @default(true) @map("rest_timer_enabled")
+  defaultLoadIncrementKg Decimal  @default(2.5) @map("default_load_increment_kg") @db.Decimal(5, 3)
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("user_settings")
+  @@schema("app")
+}

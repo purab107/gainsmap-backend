@@ -1,0 +1,89 @@
+// -----------------------------------------------------------------------------
+// Workouts module: Workouts, workout exercises (snapshots), and logged sets
+// -----------------------------------------------------------------------------
+
+model Workout {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  routineId String?   @map("routine_id") @db.Uuid
+  name      String?
+  status    String    @default("in_progress")
+  startedAt DateTime  @default(now()) @map("started_at") @db.Timestamptz
+  endedAt   DateTime? @map("ended_at") @db.Timestamptz
+  timezone  String    @default("UTC")
+  localDate DateTime  @map("local_date") @db.Date
+  notes     String?
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  routine                    Routine?                    @relation(fields: [routineId], references: [id], onDelete: SetNull)
+  workoutExercises           WorkoutExercise[]
+  progressionRecommendations ProgressionRecommendation[]
+
+  @@unique([id, userId])
+  @@index([userId, startedAt(sort: Desc)], map: "workouts_user_started_idx")
+  @@index([userId, localDate], map: "workouts_user_local_date_idx")
+  @@map("workouts")
+  @@schema("app")
+}
+
+model WorkoutExercise {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workoutId         String   @map("workout_id") @db.Uuid
+  exerciseId        String   @map("exercise_id") @db.Uuid
+  routineExerciseId String?  @map("routine_exercise_id") @db.Uuid
+  position          Int      @db.SmallInt
+  supersetGroup     Int?     @map("superset_group") @db.SmallInt
+  targetSets        Int?     @map("target_sets") @db.SmallInt
+  repMin            Int?     @map("rep_min") @db.SmallInt
+  repMax            Int?     @map("rep_max") @db.SmallInt
+  targetRir         Decimal? @map("target_rir") @db.Decimal(3, 1)
+  restSeconds       Int?     @map("rest_seconds") @db.SmallInt
+  loadIncrementKg   Decimal? @map("load_increment_kg") @db.Decimal(5, 3)
+  notes             String?
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  workout         Workout          @relation(fields: [workoutId, userId], references: [id, userId], onDelete: Cascade)
+  exercise        Exercise         @relation(fields: [exerciseId], references: [id])
+  routineExercise RoutineExercise? @relation(fields: [routineExerciseId], references: [id], onDelete: SetNull)
+  sets            Set[]
+
+  @@unique([workoutId, position], map: "workout_exercises_position_uq")
+  @@unique([id, userId, exerciseId])
+  @@index([userId, exerciseId], map: "workout_exercises_user_exercise_idx")
+  @@index([exerciseId], map: "workout_exercises_exercise_idx")
+  @@map("workout_exercises")
+  @@schema("app")
+}
+
+model Set {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String    @map("user_id") @db.Uuid
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workoutExerciseId String    @map("workout_exercise_id") @db.Uuid
+  exerciseId        String    @map("exercise_id") @db.Uuid
+  exercise          Exercise  @relation(fields: [exerciseId], references: [id])
+  setIndex          Int       @map("set_index") @db.SmallInt
+  setType           String    @default("working") @map("set_type")
+  weightKg          Decimal?  @map("weight_kg") @db.Decimal(7, 3)
+  addedWeightKg     Decimal?  @map("added_weight_kg") @db.Decimal(7, 3)
+  reps              Int?      @db.SmallInt
+  durationSeconds   Int?      @map("duration_seconds")
+  distanceM         Decimal?  @map("distance_m") @db.Decimal(9, 2)
+  rir               Decimal?  @db.Decimal(3, 1)
+  completedAt       DateTime? @map("completed_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  workoutExercise WorkoutExercise  @relation(fields: [workoutExerciseId, userId, exerciseId], references: [id, userId, exerciseId], onDelete: Cascade)
+  personalRecords PersonalRecord[]
+
+  @@unique([workoutExerciseId, setIndex], map: "sets_index_uq")
+  @@index([userId, exerciseId, completedAt(sort: Desc)], map: "sets_user_exercise_completed_idx")
+  @@map("sets")
+  @@schema("app")
+}
